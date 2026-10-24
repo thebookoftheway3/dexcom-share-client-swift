@@ -14,7 +14,11 @@ public class ShareClientManager: CGMManager {
     public static let pluginIdentifier = "DexShareClient"
 
     public init() {
+        #if LIVE_READ_ONLY
+        shareService = ShareService(username: nil, password: nil, url: nil)
+        #else
         shareService = ShareService(keychainManager: keychain)
+        #endif
     }
 
     required convenience public init?(rawState: CGMManager.RawStateValue) {
@@ -31,7 +35,9 @@ public class ShareClientManager: CGMManager {
 
     public var shareService: ShareService {
         didSet {
+            #if !LIVE_READ_ONLY
             try! keychain.setDexcomShareUsername(shareService.username, password: shareService.password, url: shareService.url)
+            #endif
         }
     }
 
@@ -80,6 +86,9 @@ public class ShareClientManager: CGMManager {
     public private(set) var latestBackfill: ShareGlucose?
 
     public func fetchNewDataIfNeeded(_ completion: @escaping (CGMReadingResult) -> Void) {
+        #if LIVE_READ_ONLY
+        completion(.noData)
+        #else
         guard let shareClient = shareService.client else {
             completion(.noData)
             return
@@ -118,6 +127,8 @@ public class ShareClientManager: CGMManager {
                 completion(.noData)
             }
         }
+
+        #endif
     }
 
     public var device: HKDevice? = nil

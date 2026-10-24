@@ -56,6 +56,9 @@ private let maxReauthAttempts = 2
 // using cocoapods in a playground appears complicated
 // ¯\_(ツ)_/¯
 private func dexcomPOST(_ url: URL, JSONData: [String: AnyObject]? = nil, callback: @escaping (Error?, String?) -> Void) {
+        #if LIVE_READ_ONLY
+        callback(ShareError.dataError(reason: "Cloud access is disabled in this research build"), nil)
+        #else
     var data: Data?
 
     if let JSONData = JSONData {
@@ -80,7 +83,9 @@ private func dexcomPOST(_ url: URL, JSONData: [String: AnyObject]? = nil, callba
             callback(nil, String(data: data!, encoding: .utf8))
         }
     }).resume()
-}
+
+        #endif
+    }
 
 public class ShareClient {
     public let username: String
